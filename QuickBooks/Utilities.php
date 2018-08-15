@@ -39,23 +39,36 @@ class QuickBooks_Utilities
 		// Some DSN strings look like this:		filesystem:///path/to/file
 		//	parse_url() will not parse this *unless* we provide some sort of hostname (in this case, null)
 		$dsn = str_replace(':///', '://null/', $dsn);
-			
+
+		// To allow for passwords with special characters, remove password from $dsn before parse_url.
+		preg_match("~.*://[^:]*:(.*)@~", $dsn, $matches);
+
+		$password = null;
+		if (count($matches) > 1) {
+			$password = $matches[1];
+			$dsn = str_replace($password, 'password', $dsn);
+		}
+
 		$defaults = array_merge(array(
-			'scheme' => '', 
-			'host' => '', 
-			'port' => 0, 
-			'user' => '', 
+			'scheme' => '',
+			'host' => '',
+			'port' => 0,
+			'user' => '',
 			'pass' => '',
-			'path' => '', 
+			'path' => '',
 			'query' => '',
-			'fragment' => '',   
+			'fragment' => '',
 			), $defaults);
-			
+
 		$parse = array_merge($defaults, parse_url($dsn));
-		
+
 		$parse['user'] = urldecode($parse['user']);
-		$parse['pass'] = urldecode($parse['pass']);
-		
+		if ($password !== null) {
+			$parse['pass'] = urldecode($password);
+		} else {
+			$parse['pass'] = urldecode($parse['pass']);
+		}
+
 		if (is_null($part))
 		{
 			return $parse;
